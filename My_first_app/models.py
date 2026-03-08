@@ -8,7 +8,7 @@ class Category(models.Model):
     description: str = models.TextField(max_length=100, verbose_name="Категория выполнения")
     name: str = models.CharField(max_length=50, verbose_name="Название категории")
 
-    def str(self):
+    def __str__(self):
         return self.name
 
 
@@ -32,7 +32,7 @@ class Task(models.Model):
 
     created_at: datetime = models.DateTimeField(auto_now_add=True, help_text="Дата и время создания")
 
-    def str(self):
+    def __str__(self):
         return self.title
 
 
@@ -52,5 +52,5 @@ related_name='subtasks', help_text='Основная задача')
     deadline: datetime = models.DateTimeField(help_text="Дата и время дедлайн")
     created_at: datetime = models.DateTimeField(auto_now_add=True, help_text="Дата и время создания")
 
-    def str(self):
-        return self.task
+    def __str__(self):
+        return self.title
