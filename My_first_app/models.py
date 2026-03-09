@@ -6,10 +6,22 @@ from django.db import models
 # Create your models here.
 class Category(models.Model):
     description: str = models.TextField(max_length=100, verbose_name="Категория выполнения")
-    name: str = models.CharField(max_length=50, verbose_name="Название категории")
+    name: str = models.CharField(max_length=50,verbose_name= "Название категории")
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        db_table = "task_manager_category"
+        verbose_name = "Category"
+        verbose_name_plural ="Categories"
+        constraints = [
+            models.UniqueConstraint(
+                fields=['name'],
+                name='unique_category'
+            )
+        ]
+
 
 
 class Task(models.Model):
@@ -35,6 +47,19 @@ class Task(models.Model):
     def __str__(self):
         return self.title
 
+    class Meta:
+        db_table = "task_manager_task"
+        verbose_name = "Task"
+        verbose_name_plural ="Tasks"
+        constraints = [
+            models.UniqueConstraint(
+                fields=['title'],
+                name='unique_task'
+
+            )
+        ]
+
+        ordering = ["-created_at"]
 
 class SubTask(models.Model):
     STATUS_CHOICES = [
@@ -54,3 +79,17 @@ related_name='subtasks', help_text='Основная задача')
 
     def __str__(self):
         return self.title
+
+    class Meta:
+        db_table = "task_manager_subtask"
+        verbose_name = "Subtask"
+        verbose_name_plural ="Subtasks"
+        constraints = [
+            models.UniqueConstraint(
+                fields=['title'],
+                name='unique_subtask'
+
+            )
+        ]
+
+        ordering = ["-created_at"]
