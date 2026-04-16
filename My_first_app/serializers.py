@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Task, Category, SubTask
+from datetime import datetime
 
 
 # OopCompanion:suppressRename
@@ -19,6 +20,9 @@ class SubTaskCreateSerializer(serializers.ModelSerializer):
         model = SubTask
         fields = ['id', 'title', 'description', 'task', 'status', 'deadline', 'created_at']
         read_only_fields = ['id', 'created_at']
+
+
+
 
 
 class CategoryCreateSerializer(serializers.ModelSerializer):
@@ -53,7 +57,7 @@ class TaskDetailSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at']
 
 
-from datetime import datetime
+
 
 
 class TaskCreateSerializer(serializers.ModelSerializer):

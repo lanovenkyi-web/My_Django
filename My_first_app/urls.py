@@ -9,4 +9,6 @@ urlpatterns = [
     path('tasks/statistics/', views.task_statistics, name='task-statistics'),
     path('subtasks/', SubTaskListCreateView.as_view(), name='subtask-list-create'),
     path('subtasks/<int:pk>/', SubTaskDetailUpdateDeleteView.as_view(), name='subtask-detail-update-delete'),
+    path('tasks/by-day/', views.task_by_weekday, name='task-by-weekday'),
+
 ]

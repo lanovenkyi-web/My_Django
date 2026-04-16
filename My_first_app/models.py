@@ -3,6 +3,9 @@ from datetime import datetime
 from django.db import models
 
 
+# OopCompanion:suppressRename
+
+
 # Create your models here.
 class Category(models.Model):
     description: str = models.TextField(max_length=100, verbose_name="Категория выполнения")
