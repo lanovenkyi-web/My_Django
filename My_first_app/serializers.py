@@ -1,28 +1,37 @@
 from rest_framework import serializers
 from .models import Task, Category, SubTask
 from datetime import datetime
+from django.utils import timezone
 
+
+
+
+class FlexibleDateTimeField(serializers.DateTimeField):
+    def to_representation(self, value):
+        if not value:
+            return None
+        return super().to_representation(value)
 
 # OopCompanion:suppressRename
 
 class TaskSerializer(serializers.ModelSerializer):
+    deadline = serializers.DateTimeField(allow_null=True, required=False)
+
     class Meta:
         model = Task
-        fields = ['id', 'title', 'description', 'status', 'deadline', 'created_at', 'categories']
-        read_only_fields = ['id', 'created_at']
-        extra_kwargs = {
-            'categories': {'required': False}
-        }
+        fields = '__all__'
 
 
 class SubTaskCreateSerializer(serializers.ModelSerializer):
+    deadline = serializers.DateTimeField(
+        allow_null=True,
+        required=False
+    )
+
     class Meta:
         model = SubTask
         fields = ['id', 'title', 'description', 'task', 'status', 'deadline', 'created_at']
         read_only_fields = ['id', 'created_at']
-
-
-
 
 
 class CategoryCreateSerializer(serializers.ModelSerializer):
@@ -43,6 +52,11 @@ class CategoryCreateSerializer(serializers.ModelSerializer):
 
 
 class SubTaskSerializer(serializers.ModelSerializer):
+    deadline = serializers.DateTimeField(
+        allow_null=True,
+        required=False
+    )
+
     class Meta:
         model = SubTask
         fields = ['id', 'title', 'description', 'status', 'deadline', 'created_at']
@@ -57,16 +71,22 @@ class TaskDetailSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at']
 
 
-
-
-
 class TaskCreateSerializer(serializers.ModelSerializer):
+
+    deadline = serializers.DateTimeField(allow_null=True, required=False)
     class Meta:
         model = Task
-        fields = ['id', 'title', 'description', 'status', 'deadline', 'created_at', 'categories']
-        read_only_fields = ['id', 'created_at']
+        fields = ['id', 'title', 'description', 'status', 'deadline', 'categories']
+        extra_kwargs = {
+            'categories': {'required': False}
+        }
+
+
+
+
+    validators = []
 
     def validate_deadline(self, value):
-        if value < datetime.now():
+        if value and value < timezone.now():
             raise serializers.ValidationError("Дата дедлайна не может быть в прошлом")
         return value
