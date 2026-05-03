@@ -14,8 +14,6 @@ class FlexibleDateTimeField(serializers.DateTimeField):
         return super().to_representation(value)
 
 
-
-
 class TaskSerializer(serializers.ModelSerializer):
     deadline = serializers.DateTimeField(allow_null=True, required=False)
 
@@ -55,10 +53,10 @@ class CategoryCreateSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         if (
-            "name" in validated_data
-            and Category.objects.filter(name=validated_data["name"])
-            .exclude(id=instance.id)
-            .exists()
+                "name" in validated_data
+                and Category.objects.filter(name=validated_data["name"])
+                .exclude(id=instance.id)
+                .exists()
         ):
             raise serializers.ValidationError(
                 "Категория с таким названием уже существует"

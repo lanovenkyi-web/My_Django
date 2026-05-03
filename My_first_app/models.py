@@ -1,18 +1,34 @@
 from datetime import datetime
+from django.utils import timezone
 from django.db import models
 
 
 # OopCompanion:suppressRename
 
 
+class CategoryManager(models.Manager):
+
+    def get_queryset(self):
+        return super().get_queryset().filter(is_deleted=False)
+
 
 class Category(models.Model):
-
     description = models.TextField(max_length=100, verbose_name="Категория выполнения")
     name = models.CharField(max_length=50, verbose_name="Название категории")
+    is_deleted = models.BooleanField(default=False, verbose_name="Удалена")
+    deleted_at = models.DateTimeField(null=True, blank=True, verbose_name="Дата удаления")
+
+    objects = CategoryManager()
+
+    all_objects = models.Manager()
 
     def __str__(self):
         return self.name
+
+    def delete(self, *args, **kwargs):
+        self.is_deleted = True
+        self.deleted_at = timezone.now()
+        self.save()
 
     class Meta:
         db_table = "task_manager_category"
@@ -39,7 +55,6 @@ class Task(models.Model):
     description = models.TextField(max_length=100, verbose_name="Описание задачи")
     categories = models.ManyToManyField(Category, related_name="tasks", verbose_name="Категории задачи")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="new", verbose_name="Статус задачи")
-
 
     deadline = models.DateTimeField(help_text="Дата и время дедлайна", null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, help_text="Дата и время создания")
@@ -73,7 +88,6 @@ class SubTask(models.Model):
     description = models.TextField(max_length=100, verbose_name="Описание подзадачи")
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='subtasks', help_text='Основная задача')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="new", verbose_name="Статус задачи")
-
 
     deadline = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, help_text="Дата и время создания")

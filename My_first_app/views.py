@@ -2,8 +2,8 @@ from django.db.models import Count
 from django.http import HttpResponse
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters
-from rest_framework.decorators import api_view
+from rest_framework import filters, status, viewsets
+from rest_framework.decorators import action, api_view
 from rest_framework.generics import (
     CreateAPIView,
     ListCreateAPIView,
@@ -158,3 +158,36 @@ class CategoryDetailUpdateDeleteView(RetrieveUpdateDestroyAPIView):
     queryset = Category.objects.all()
     serializer_class = CategoryCreateSerializer
     lookup_field = "id"
+
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategoryCreateSerializer
+    lookup_field = "id"
+    
+    def get_serializer_class(self):
+        if self.request.method in ["POST", "PUT", "PATCH"]:
+            return CategoryCreateSerializer
+        return CategoryCreateSerializer  # Можно создать отдельный CategorySerializer для GET
+    
+    def perform_destroy(self, instance):
+        instance.delete()
+    
+    @action(detail=True, methods=['get'], url_path='count-tasks')
+    def count_tasks(self, request, id=None):
+
+        try:
+            category = self.get_object()
+            task_count = category.tasks.count()
+            
+            return Response({
+                'category_id': category.id,
+                'category_name': category.name,
+                'task_count': task_count,
+                'message': f'В категории "{category.name}" найдено {task_count} задач'
+            })
+        except Category.DoesNotExist:
+            return Response(
+                {'error': 'Категория не найдена'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
