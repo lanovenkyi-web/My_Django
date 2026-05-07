@@ -23,8 +23,6 @@ from .serializers import (
     TaskSerializer,
 )
 
-# OopCompanion:suppressRename
-
 
 def index(request):
     return HttpResponse("Hello, Serhii !!!.")
@@ -34,8 +32,18 @@ def page(request):
     return HttpResponse("My first page !!!.")
 
 
-class SubTaskPagination(PageNumberPagination):
-    page_size = 5
+class SubTaskListCreateAPIView(ListCreateAPIView):
+    queryset = SubTask.objects.all()
+    serializer_class = SubTaskSerializer
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter,
+    ]
+    filterset_fields = ["status", "deadline"]
+    search_fields = ["title", "description"]
+    ordering_fields = ["created_at"]
+    ordering = ["-created_at"]
 
 
 class TaskCreateView(CreateAPIView):
@@ -99,21 +107,6 @@ def task_statistics(request):
     return Response(statistics)
 
 
-class SubTaskListCreateAPIView(ListCreateAPIView):
-    queryset = SubTask.objects.all()
-    serializer_class = SubTaskSerializer
-    pagination_class = SubTaskPagination
-    filter_backends = [
-        DjangoFilterBackend,
-        filters.SearchFilter,
-        filters.OrderingFilter,
-    ]
-    filterset_fields = ["status", "deadline"]
-    search_fields = ["title", "description"]
-    ordering_fields = ["created_at"]
-    ordering = ["-created_at"]
-
-
 class SubTaskDetailUpdateDeleteView(RetrieveUpdateDestroyAPIView):
     queryset = SubTask.objects.all()
     lookup_field = "id"
@@ -168,7 +161,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.request.method in ["POST", "PUT", "PATCH"]:
             return CategoryCreateSerializer
-        return CategoryCreateSerializer  # Можно создать отдельный CategorySerializer для GET
+        return CategoryCreateSerializer
     
     def perform_destroy(self, instance):
         instance.delete()

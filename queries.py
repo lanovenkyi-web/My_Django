@@ -14,11 +14,8 @@ Task.objects.filter(title="Prepare presentation").delete()
 
 task = Task.objects.create(
 title="Prepare presentation",
-
 description="Prepare materials and slides for the presentation",
-
 status="new",
-
 deadline=timezone.now()+ timedelta(days=3),
 )
 
@@ -28,7 +25,6 @@ subtask1 = SubTask.objects.create(
     description="Find necessary information for the presentation",
     status="new",
     deadline=timezone.now()+ timedelta(days=2),
-
 )
 
 
@@ -37,20 +33,13 @@ subtask2 = SubTask.objects.create(
     description="Create presentation slides",
     status="new",
     deadline=timezone.now()+ timedelta(days=1),
-
 )
-#2==================================================================================
-
 new_tasks = Task.objects.filter(status="new")
 
 print(list(new_tasks))
-
-
 expired_subtasks = SubTask.objects.filter(status="done",dedline__lt=timezone.now())
 print(list(expired_subtasks))
 
-
-#3==================================================================================
 
 print("Update")
 
@@ -82,7 +71,6 @@ subtask2_update.save()
 print(subtask2_update)
 
 
-#4================================================================================
 print("Delete")
 task_dell=Task.objects.get(
     title="Prepare presentation"

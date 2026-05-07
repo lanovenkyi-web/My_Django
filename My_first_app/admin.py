@@ -3,10 +3,6 @@ from django.contrib import admin
 from My_first_app.models import *
 
 
-# admin.site.register(Task)
-# admin.site.register(SubTask)
-# admin.site.register(Category)
-
 
 class SubTaskInline(admin.TabularInline):
     model = SubTask

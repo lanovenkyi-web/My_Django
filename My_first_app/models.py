@@ -3,8 +3,6 @@ from django.utils import timezone
 from django.db import models
 
 
-# OopCompanion:suppressRename
-
 
 class CategoryManager(models.Manager):
 

@@ -4,8 +4,6 @@ from rest_framework import serializers
 from .models import Category, SubTask, Task
 
 
-# OopCompanion:suppressRename
-
 
 class FlexibleDateTimeField(serializers.DateTimeField):
     def to_representation(self, value):
