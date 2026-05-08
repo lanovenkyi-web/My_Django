@@ -2,8 +2,8 @@ from django.db.models import Count
 from django.http import HttpResponse
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, status, viewsets
-from rest_framework.decorators import action, api_view
+from rest_framework import filters, permissions, status, viewsets
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.generics import (
     CreateAPIView,
     ListCreateAPIView,
@@ -35,6 +35,7 @@ def page(request):
 class SubTaskListCreateAPIView(ListCreateAPIView):
     queryset = SubTask.objects.all()
     serializer_class = SubTaskSerializer
+    permission_classes = [permissions.IsAuthenticated]
     filter_backends = [
         DjangoFilterBackend,
         filters.SearchFilter,
@@ -49,11 +50,13 @@ class SubTaskListCreateAPIView(ListCreateAPIView):
 class TaskCreateView(CreateAPIView):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
 
 class TaskListCreateAPIView(ListCreateAPIView):
     queryset = Task.objects.all()
     serializer_class = TaskCreateSerializer
+    permission_classes = [permissions.IsAuthenticated]
     filter_backends = [
         DjangoFilterBackend,
         filters.SearchFilter,
@@ -74,6 +77,7 @@ class TaskListCreateAPIView(ListCreateAPIView):
 class TaskRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     queryset = Task.objects.all()
     serializer_class = TaskDetailSerializer
+    permission_classes = [permissions.IsAuthenticated]
     lookup_field = "id"
 
     def get_serializer_class(self):
@@ -85,9 +89,11 @@ class TaskRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
 class TaskDetailView(RetrieveAPIView):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
 
 @api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
 def task_statistics(request):
     total_tasks = Task.objects.count()
 
@@ -109,6 +115,7 @@ def task_statistics(request):
 
 class SubTaskDetailUpdateDeleteView(RetrieveUpdateDestroyAPIView):
     queryset = SubTask.objects.all()
+    permission_classes = [permissions.IsAuthenticated]
     lookup_field = "id"
 
     def get_serializer_class(self):
@@ -118,6 +125,7 @@ class SubTaskDetailUpdateDeleteView(RetrieveUpdateDestroyAPIView):
 
 
 @api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
 def task_by_weekday(request):
     weekday_map = {
         "monday": 2,
@@ -143,6 +151,7 @@ def task_by_weekday(request):
 class CategoryListCreateAPIView(ListCreateAPIView):
     queryset = Category.objects.all()
     serializer_class = CategoryCreateSerializer
+    permission_classes = [permissions.IsAuthenticated]
     filter_backends = [filters.SearchFilter]
     search_fields = ["name", "description"]
 
@@ -150,12 +159,14 @@ class CategoryListCreateAPIView(ListCreateAPIView):
 class CategoryDetailUpdateDeleteView(RetrieveUpdateDestroyAPIView):
     queryset = Category.objects.all()
     serializer_class = CategoryCreateSerializer
+    permission_classes = [permissions.IsAuthenticated]
     lookup_field = "id"
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategoryCreateSerializer
+    permission_classes = [permissions.IsAuthenticated]
     lookup_field = "id"
     
     def get_serializer_class(self):
