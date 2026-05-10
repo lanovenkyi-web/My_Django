@@ -14,6 +14,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from .models import Category, SubTask, Task
+from .permissions import IsOwner, IsOwnerOrReadOnly
 from .serializers import (
     CategoryCreateSerializer,
     SubTaskCreateSerializer,
@@ -46,11 +47,22 @@ class SubTaskListCreateAPIView(ListCreateAPIView):
     ordering_fields = ["created_at"]
     ordering = ["-created_at"]
 
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return SubTaskCreateSerializer
+        return SubTaskSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
 
 class TaskCreateView(CreateAPIView):
     queryset = Task.objects.all()
-    serializer_class = TaskSerializer
+    serializer_class = TaskCreateSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
 
 
 class TaskListCreateAPIView(ListCreateAPIView):
@@ -73,11 +85,14 @@ class TaskListCreateAPIView(ListCreateAPIView):
             return TaskCreateSerializer
         return TaskSerializer
 
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
 
 class TaskRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     queryset = Task.objects.all()
     serializer_class = TaskDetailSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
     lookup_field = "id"
 
     def get_serializer_class(self):
@@ -115,7 +130,7 @@ def task_statistics(request):
 
 class SubTaskDetailUpdateDeleteView(RetrieveUpdateDestroyAPIView):
     queryset = SubTask.objects.all()
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
     lookup_field = "id"
 
     def get_serializer_class(self):
@@ -145,6 +160,22 @@ def task_by_weekday(request):
             tasks = tasks.filter(created_at__week_day=weekday_number)
 
     serializer = TaskSerializer(tasks, many=True)
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+def my_tasks(request):
+    tasks = Task.objects.filter(owner=request.user)
+    serializer = TaskSerializer(tasks, many=True)
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+def my_subtasks(request):
+    subtasks = SubTask.objects.filter(owner=request.user)
+    serializer = SubTaskSerializer(subtasks, many=True)
     return Response(serializer.data)
 
 

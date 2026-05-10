@@ -14,6 +14,7 @@ class FlexibleDateTimeField(serializers.DateTimeField):
 
 class TaskSerializer(serializers.ModelSerializer):
     deadline = serializers.DateTimeField(allow_null=True, required=False)
+    owner = serializers.StringRelatedField(read_only=True)
 
     class Meta:
         model = Task
@@ -33,8 +34,9 @@ class SubTaskCreateSerializer(serializers.ModelSerializer):
             "status",
             "deadline",
             "created_at",
+            "owner",
         ]
-        read_only_fields = ["id", "created_at"]
+        read_only_fields = ["id", "created_at", "owner"]
 
 
 class CategoryCreateSerializer(serializers.ModelSerializer):
@@ -64,14 +66,16 @@ class CategoryCreateSerializer(serializers.ModelSerializer):
 
 class SubTaskSerializer(serializers.ModelSerializer):
     deadline = serializers.DateTimeField(allow_null=True, required=False)
+    owner = serializers.StringRelatedField(read_only=True)
 
     class Meta:
         model = SubTask
-        fields = ["id", "title", "description", "status", "deadline", "created_at"]
+        fields = ["id", "title", "description", "status", "deadline", "created_at", "owner"]
 
 
 class TaskDetailSerializer(serializers.ModelSerializer):
     subtasks = SubTaskSerializer(many=True, read_only=True)
+    owner = serializers.StringRelatedField(read_only=True)
 
     class Meta:
         model = Task
@@ -84,6 +88,7 @@ class TaskDetailSerializer(serializers.ModelSerializer):
             "created_at",
             "categories",
             "subtasks",
+            "owner",
         ]
         read_only_fields = ["id", "created_at"]
 
@@ -93,7 +98,8 @@ class TaskCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Task
-        fields = ["id", "title", "description", "status", "deadline", "categories"]
+        fields = ["id", "title", "description", "status", "deadline", "categories", "owner"]
+        read_only_fields = ["id", "owner"]
         extra_kwargs = {"categories": {"required": False}}
 
     def validate_deadline(self, value):

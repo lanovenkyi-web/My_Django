@@ -1,6 +1,7 @@
 from datetime import datetime
 from django.utils import timezone
 from django.db import models
+from django.contrib.auth.models import User
 
 
 
@@ -11,10 +12,10 @@ class CategoryManager(models.Manager):
 
 
 class Category(models.Model):
-    description = models.TextField(max_length=100, verbose_name="Категория выполнения")
-    name = models.CharField(max_length=50, verbose_name="Название категории")
-    is_deleted = models.BooleanField(default=False, verbose_name="Удалена")
-    deleted_at = models.DateTimeField(null=True, blank=True, verbose_name="Дата удаления")
+    description = models.TextField(max_length=100)
+    name = models.CharField(max_length=50)
+    is_deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, blank=True)
 
     objects = CategoryManager()
 
@@ -49,13 +50,14 @@ class Task(models.Model):
         ("done", "Done"),
     ]
 
-    title = models.CharField(max_length=50, unique_for_date="created_at", verbose_name="Название задачи")
-    description = models.TextField(max_length=100, verbose_name="Описание задачи")
-    categories = models.ManyToManyField(Category, related_name="tasks", verbose_name="Категории задачи")
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="new", verbose_name="Статус задачи")
+    title = models.CharField(max_length=50, unique_for_date="created_at")
+    description = models.TextField(max_length=100)
+    categories = models.ManyToManyField(Category, related_name="tasks")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="new")
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tasks')
 
-    deadline = models.DateTimeField(help_text="Дата и время дедлайна", null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, help_text="Дата и время создания")
+    deadline = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.title
@@ -82,13 +84,14 @@ class SubTask(models.Model):
         ("done", "Done"),
     ]
 
-    title = models.CharField(max_length=50, unique_for_date="created_at", verbose_name="Название подзадачи")
-    description = models.TextField(max_length=100, verbose_name="Описание подзадачи")
-    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='subtasks', help_text='Основная задача')
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="new", verbose_name="Статус задачи")
+    title = models.CharField(max_length=50, unique_for_date="created_at")
+    description = models.TextField(max_length=100)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='subtasks')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="new")
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subtasks')
 
     deadline = models.DateTimeField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, help_text="Дата и время создания")
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.title
