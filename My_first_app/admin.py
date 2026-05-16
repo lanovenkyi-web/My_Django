@@ -3,6 +3,9 @@ from django.contrib import admin
 from My_first_app.models import *
 
 
+# OopCompanion:suppressRename
+
+
 
 class SubTaskInline(admin.TabularInline):
     model = SubTask

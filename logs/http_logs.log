@@ -9,3 +9,16 @@
 2026-05-07 19:33:40,629 GET /api/tasks/ 200 7.58ms
 2026-05-07 19:34:19,855 POST /api/token/ 200 249.10ms
 2026-05-07 19:34:21,909 GET /api/tasks/ 200 6.62ms
+2026-05-10 18:13:44,063 POST /api/auth/register/ 400 103.17ms
+2026-05-10 18:14:06,506 POST /api/auth/register/ 201 484.20ms
+2026-05-10 18:14:14,389 POST /api/auth/login/ 200 307.80ms
+2026-05-10 18:14:33,924 GET /api/auth/profile/ 401 0.00ms
+2026-05-10 18:14:41,046 POST /api/auth/login/ 200 293.26ms
+2026-05-10 18:14:54,565 POST /api/auth/register/ 400 4.56ms
+2026-05-10 18:14:56,906 POST /api/auth/login/ 200 292.56ms
+2026-05-10 18:14:58,966 GET /api/auth/profile/ 200 20.25ms
+2026-05-10 18:15:01,016 POST /api/auth/logout/ 401 0.00ms
+2026-05-10 18:15:24,146 POST /api/auth/register/ 400 3.66ms
+2026-05-10 18:15:26,462 POST /api/auth/login/ 200 294.88ms
+2026-05-10 18:15:28,510 GET /api/auth/profile/ 200 4.15ms
+2026-05-10 18:15:30,602 POST /api/auth/logout/ 200 48.09ms

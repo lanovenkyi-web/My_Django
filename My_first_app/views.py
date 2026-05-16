@@ -10,11 +10,15 @@ from rest_framework.generics import (
     RetrieveAPIView,
     RetrieveUpdateDestroyAPIView,
 )
-from rest_framework.pagination import PageNumberPagination
+from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenRefreshView
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 
-from .models import Category, SubTask, Task
-from .permissions import IsOwner, IsOwnerOrReadOnly
+from .models import Category, CustomUser, SubTask, Task
+from .permissions import IsOwnerOrReadOnly
 from .serializers import (
     CategoryCreateSerializer,
     SubTaskCreateSerializer,
@@ -22,7 +26,13 @@ from .serializers import (
     TaskCreateSerializer,
     TaskDetailSerializer,
     TaskSerializer,
+    UserLoginSerializer,
+    UserProfileSerializer,
+    UserRegistrationSerializer,
 )
+
+
+# OopCompanion:suppressRename
 
 
 def index(request):
@@ -226,3 +236,173 @@ class CategoryViewSet(viewsets.ModelViewSet):
                 {'error': 'Категория не найдена'}, 
                 status=status.HTTP_404_NOT_FOUND
             )
+
+
+class UserRegistrationView(CreateAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = UserRegistrationSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        
+        refresh = RefreshToken.for_user(user)
+        
+        response_data = {
+            'user': UserProfileSerializer(user).data,
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'message': 'Registration successful'
+        }
+        
+        response = Response(response_data, status=status.HTTP_201_CREATED)
+        
+        response.set_cookie(
+            'access_token',
+            str(refresh.access_token),
+            max_age=60 * 15,  # 15 minutes
+            httponly=True,
+            samesite='Lax',
+            secure=False  # Set to True in production with HTTPS
+        )
+        
+        response.set_cookie(
+            'refresh_token',
+            str(refresh),
+            max_age=60 * 60 * 24 * 7,  # 7 days
+            httponly=True,
+            samesite='Lax',
+            secure=False  # Set to True in production with HTTPS
+        )
+        
+        return response
+
+
+class UserLoginView(APIView):
+    permission_classes = [permissions.AllowAny]
+    serializer_class = UserLoginSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        
+        user = serializer.validated_data['user']
+        refresh = RefreshToken.for_user(user)
+        
+        response_data = {
+            'user': UserProfileSerializer(user).data,
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'message': 'Login successful'
+        }
+        
+        response = Response(response_data, status=status.HTTP_200_OK)
+        
+        response.set_cookie(
+            'access_token',
+            str(refresh.access_token),
+            max_age=60 * 15,  # 15 minutes
+            httponly=True,
+            samesite='Lax',
+            secure=False  # Set to True in production with HTTPS
+        )
+        
+        response.set_cookie(
+            'refresh_token',
+            str(refresh),
+            max_age=60 * 60 * 24 * 7,  # 7 days
+            httponly=True,
+            samesite='Lax',
+            secure=False  # Set to True in production with HTTPS
+        )
+        
+        return response
+
+
+class UserLogoutView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        try:
+            refresh_token = request.COOKIES.get('refresh_token')
+            if not refresh_token:
+                refresh_token = request.data.get('refresh')
+            
+            if refresh_token:
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+            
+            response = Response({'message': 'Logout successful'}, status=status.HTTP_200_OK)
+            
+            response.delete_cookie('access_token')
+            response.delete_cookie('refresh_token')
+            
+            return response
+            
+        except TokenError:
+            response = Response(
+                {'error': 'Invalid token'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            response.delete_cookie('access_token')
+            response.delete_cookie('refresh_token')
+            return response
+
+
+class CustomTokenRefreshView(TokenRefreshView):
+    def post(self, request, *args, **kwargs):
+        refresh_token = request.COOKIES.get('refresh_token')
+        
+        if refresh_token:
+            request.data['refresh'] = refresh_token
+        
+        response = super().post(request, *args, **kwargs)
+        
+        if response.status_code == 200:
+            access_token = response.data.get('access')
+            if access_token:
+                response.set_cookie(
+                    'access_token',
+                    access_token,
+                    max_age=60 * 15,  # 15 minutes
+                    httponly=True,
+                    samesite='Lax',
+                    secure=False  # Set to True in production with HTTPS
+                )
+        
+        return response
+
+
+class UserProfileView(RetrieveAPIView):
+    serializer_class = UserProfileSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def logout_all_devices(request):
+    try:
+        tokens = OutstandingToken.objects.filter(user_id=request.user.id)
+        for token in tokens:
+            BlacklistedToken.objects.get_or_create(token=token)
+        
+        response = Response(
+            {'message': 'Successfully logged out from all devices'}, 
+            status=status.HTTP_200_OK
+        )
+        
+        response.delete_cookie('access_token')
+        response.delete_cookie('refresh_token')
+        
+        return response
+        
+    except Exception as e:
+        return Response(
+            {'error': str(e)}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )

@@ -2,6 +2,9 @@ import time
 import logging
 from django.utils.deprecation import MiddlewareMixin
 
+
+# OopCompanion:suppressRename
+
 logger = logging.getLogger('django.request')
 
 class HTTPRequestLoggingMiddleware(MiddlewareMixin):
